@@ -1,42 +1,59 @@
-import{createPassword,comparePassword} from "../utils/hash.js";
-import { findUserByEmail,createUser } from "../models/user.model.js";
+import { createPassword } from "../utils/hash.js";
+import { findUserByEmail, createUser } from "../models/user.model.js";
 
-export const register = async (req,res) => {
-    const{username,email,password} = req.body;
-    if(!username || !email || !password) return res.status(400).json({message : "Please enter username,email and password."});
-    const user = await findUserByEmail(email);
-    if(user) return res.status(409).json({message : "Email is already registered."});
-    
-    try{
+
+export const register = async (req, res, next) => {
+  const { username, email, password } = req.body;
+  if (!username || !email || !password)
+    return res.status(400).json({ message: "Please enter username, email and password." });
+
+  try {
+    const existingUser = await findUserByEmail(email);
+    if (existingUser)
+      return res.status(409).json({ message: "Email is already registered." });
+
     const hashedPassword = await createPassword(password);
-    const newUser = await createUser(username,email,hashedPassword);
+    const newUser = await createUser(username, email, hashedPassword);
 
-    res.status(201).json({
-        message : "Registered succesfully",
-        user : newUser
-    })
-    }
-    catch(err){
-        console.error(err);
-    }
+  
+    req.login(newUser, (err) => {
+      if (err) return next(err);
+      res.status(201).json({
+        message: "Registered and logged in successfully",
+        user: newUser
+      });
+    });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: "Registration failed" });
+  }
+};
 
-}
-export const login = async (req,res) => {
-    const email = req.body.email;
-    const plainPassword = req.body.password;
-    if(!email||!plainPassword) return res.status(400).json({message : "Email and password required"});
-    try{
-    const user = await findUserByEmail(email);
-    if(!user) return res.status(401).json({message : "Invalid credentials"});
-    const compare = await comparePassword(plainPassword,user.password);
 
-    if(!compare){return res.status(401).json({message : "Invalid credentials"})};
+import passport from "passport";
 
-    res.status(200).json({ message: "Login successful", user: { id: user.id, email: user.email } });
-    }
-    catch(error){
-        console.error(error);
-        res.status(500).json({message : "db error"});
-    }
-}
+export const login = (req, res, next) => {
+  passport.authenticate("local", (err, user, info) => {
+    if (err) return next(err);
+    if (!user) return res.status(401).json({ message: info.message || "Invalid credentials" });
 
+    req.login(user, (err) => {
+      if (err) return next(err);
+      res.status(200).json({ message: "Login successful", user });
+    });
+  })(req, res, next);
+};
+
+
+export const logout = (req, res) => {
+  req.logout((err) => {
+    if (err) return res.status(500).json({ message: "Logout failed" });
+    res.json({ message: "Logged out" });
+  });
+};
+
+
+export const me = (req, res) => {
+  if (!req.user) return res.status(401).json({ message: "Not logged in" });
+  res.json({ user: req.user });
+};

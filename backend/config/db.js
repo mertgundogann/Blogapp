@@ -8,4 +8,12 @@ const db = new Client({
     port : process.env.DB_PORT
 })
 
-db.connect();
+try{
+    await db.connect();
+    console.log("DB is connected.")
+}
+catch(error){
+    console.error("Cant connect db.");
+    console.error(error.message);
+}
+export default db;

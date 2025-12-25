@@ -1,6 +1,6 @@
 import passport from "passport";
 import { Strategy as LocalStrategy } from "passport-local";
-import {findUserByEmail, findUserById} from "../models/user.model"
+import {findUserByEmail, findUserById} from "../models/user.model.js"
 import { comparePassword } from "../utils/hash.js";
 
 passport.use(

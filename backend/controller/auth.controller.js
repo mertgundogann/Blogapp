@@ -2,14 +2,14 @@ import{createPassword,comparePassword} from "../utils/hash.js";
 import { findUserByEmail,createUser } from "../models/user.model.js";
 
 export const register = async (req,res) => {
-    const{email,password} = req.body;
-    if(!email || !password) return res.status(400).json({message : "Please enter email and password."});
+    const{username,email,password} = req.body;
+    if(!username || !email || !password) return res.status(400).json({message : "Please enter username,email and password."});
     const user = await findUserByEmail(email);
     if(user) return res.status(409).json({message : "Email is already registered."});
     
     try{
     const hashedPassword = await createPassword(password);
-    const newUser = await createUser(email,hashedPassword);
+    const newUser = await createUser(username,email,hashedPassword);
 
     res.status(201).json({
         message : "Registered succesfully",
@@ -39,3 +39,4 @@ export const login = async (req,res) => {
         res.status(500).json({message : "db error"});
     }
 }
+

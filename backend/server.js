@@ -14,7 +14,7 @@ app.use(express.json());
 
 // Cors
 app.use(cors({
-  origin: "http://localhost:Port", // React frontend port
+  origin: "http://localhost:5173", // React frontend port
   credentials: true                
 }));
 

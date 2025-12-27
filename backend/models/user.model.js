@@ -24,9 +24,9 @@ export const findUserById = async (id) => {
 };
 
 
-export const createUser = async(username,email,password) => {
+export const createUser = async(email,password,username) => {
     try{
-const result = await db.query("INSERT INTO users(username,email,password) VALUES($1,$2,$3) RETURNING id,username,email",[username,email,password]);
+const result = await db.query("INSERT INTO users(email,password,username) VALUES($1,$2,$3) RETURNING id,email,username",[email,password,username]);
     return result.rows[0];
     }
       catch(error){

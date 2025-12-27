@@ -3,9 +3,10 @@ import { findUserByEmail, createUser } from "../models/user.model.js";
 
 
 export const register = async (req, res, next) => {
-  const { username, email, password } = req.body;
-  if (!username || !email || !password)
-    return res.status(400).json({ message: "Please enter username, email and password." });
+  
+  const {email, password,username} = req.body;
+  if (!email || !password)
+    return res.status(400).json({ message: "Please enter email and password." });
 
   try {
     const existingUser = await findUserByEmail(email);
@@ -13,14 +14,18 @@ export const register = async (req, res, next) => {
       return res.status(409).json({ message: "Email is already registered." });
 
     const hashedPassword = await createPassword(password);
-    const newUser = await createUser(username, email, hashedPassword);
+    const newUser = await createUser(email, hashedPassword,username);
 
   
     req.login(newUser, (err) => {
       if (err) return next(err);
       res.status(201).json({
         message: "Registered and logged in successfully",
-        user: newUser
+        user: {
+          id : newUser.id,
+          email : newUser.email,
+          username : newUser.username
+        }
       });
     });
   } catch (err) {
